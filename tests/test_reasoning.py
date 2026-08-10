@@ -1,6 +1,5 @@
 """Tests for common.llm.reasoning — reasoning output extraction."""
 
-import pytest
 from common.llm.reasoning import extract_response_from_reasoning, extract_json_from_reasoning
 
 
