@@ -15,9 +15,10 @@ Usage::
 
     result = adapt_template(
         template=my_template,
-        source_doc="Resume text...",
         llm_client=client,
         model="anthropic/claude-3-5-sonnet",
+        template_schema=my_template.schema,  # optional; preserves minLength/etc.
+        rules_fn=run_rules,  # optional; accepts (parsed) or (style_guide, parsed)
     )
     if result.has_blocking_errors:
         ...
@@ -29,6 +30,7 @@ Dependencies: ``jsonschema`` (Draft 2020-12).
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 from dataclasses import dataclass, field
@@ -118,6 +120,21 @@ def _fill_body(template: TemplateLike, parsed: dict[str, Any]) -> str:
     return body
 
 
+def _synthesized_schema(template: TemplateLike) -> dict[str, Any]:
+    """Fallback schema when caller does not provide one.
+
+    Used only when ``template_schema`` is omitted.  Preserves the
+    pre-#76 behaviour so existing callers (e.g. simple projects without
+    per-template constraints) keep working unchanged.
+    """
+    return {
+        "type": "object",
+        "properties": {name: {"type": "string"} for name in template.placeholders},
+        "required": list(template.placeholders),
+        "additionalProperties": False,
+    }
+
+
 def adapt_template(
     template: TemplateLike,
     llm_client: Any,
@@ -128,6 +145,7 @@ def adapt_template(
     max_tokens: int = 4096,
     run_rules: bool = True,
     rules_fn: Any = None,
+    template_schema: dict[str, Any] | None = None,
 ) -> AdaptationResult:
     """Adapt a template using an LLM call.
 
@@ -144,8 +162,24 @@ def adapt_template(
         temperature: Sampling temperature (default 0.0 for structured output).
         max_tokens: Max output tokens.
         run_rules: If True, call ``rules_fn`` on the parsed output.
-        rules_fn: Optional callable ``(parsed) -> list[RuleViolation]``.
-            If None, rule checking is skipped even when ``run_rules=True``.
+        rules_fn: Optional callable for rule checking.  Two signatures
+            are supported, detected via :func:`inspect.signature`::
+
+                rules_fn(parsed) -> list                  # legacy (1-arg)
+                rules_fn(style_guide, parsed) -> list     # preferred (2-arg)
+
+            The 2-arg form receives ``template.style_guide`` so callers
+            like resume-customizer's ``run_rules(StyleGuide, parsed)``
+            work without adapter glue.  If None, rule checking is
+            skipped even when ``run_rules=True``.
+        template_schema: Optional JSON Schema to use for validation.
+            If provided, overrides the synthesized schema (which only
+            encodes ``required`` + ``additionalProperties:false``).
+            Pass this when your template declares per-field constraints
+            (``minLength``, ``maxLength``, ``minItems``, ``maxItems``,
+            ``additionalProperties:false`` on nested objects, etc.).
+            If None, a synthesized schema is used — see
+            :func:`_synthesized_schema`.
 
     Returns:
         AdaptationResult with parsed JSON, filled body, and any violations.
@@ -153,12 +187,11 @@ def adapt_template(
     system_prompt = _build_system_prompt(template)
     user_prompt = source_doc or "Fill the template based on the provided context."
 
-    schema = {
-        "type": "object",
-        "properties": {name: {"type": "string"} for name in template.placeholders},
-        "required": list(template.placeholders),
-        "additionalProperties": False,
-    }
+    schema = (
+        template_schema
+        if template_schema is not None
+        else _synthesized_schema(template)
+    )
 
     schema_violations: list[str] = []
     parsed: dict[str, Any] = {}
@@ -202,7 +235,26 @@ def adapt_template(
 
     rule_violations = []
     if run_rules and rules_fn is not None and parsed:
-        rule_violations = rules_fn(parsed)
+        try:
+            sig = inspect.signature(rules_fn)
+            nparams = len(
+                [
+                    p
+                    for p in sig.parameters.values()
+                    if p.default is inspect.Parameter.empty
+                    or p.kind
+                    in (
+                        inspect.Parameter.POSITIONAL_ONLY,
+                        inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                    )
+                ]
+            )
+        except (TypeError, ValueError):
+            nparams = 1  # builtins / no signature; assume legacy 1-arg form
+        if nparams >= 2:
+            rule_violations = rules_fn(template.style_guide, parsed)
+        else:
+            rule_violations = rules_fn(parsed)
 
     return AdaptationResult(
         template_name=getattr(template, "name", "unknown"),
