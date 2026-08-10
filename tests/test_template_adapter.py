@@ -1,6 +1,5 @@
 """Tests for common.llm.template_adapter — schema-validated LLM template filling."""
 
-import pytest
 from dataclasses import dataclass
 from unittest.mock import MagicMock
 from common.llm.template_adapter import adapt_template, AdaptationResult
