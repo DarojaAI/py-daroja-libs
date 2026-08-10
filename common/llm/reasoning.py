@@ -26,8 +26,17 @@ logger = logging.getLogger(__name__)
 def extract_response_from_reasoning(content: str) -> str:
     """Extract the actual response from a reasoning model's output.
 
-    Handles various reasoning model formats:
-    - DeepSeek R1: ``")
+    Handles common reasoning model formats:
+    - DeepSeek/o1-style output containing ``<think>...</think>`` blocks
+    - Already-clean JSON payloads
+    - Mixed prose + JSON responses where JSON must be extracted
+
+    Args:
+        content: Raw model output string.
+
+    Returns:
+        Best-effort extracted response text (typically JSON if present).
+    """
         if len(parts) > 1:
             extracted = parts[-1].strip()
             logger.debug("Stripped <think> tags, response length: %d chars", len(extracted))
