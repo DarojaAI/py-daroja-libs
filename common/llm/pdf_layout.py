@@ -16,7 +16,6 @@ The defaults are calibrated for US Letter with 0.75" margins.  Adjust
 margin settings.
 """
 
-import re
 from dataclasses import dataclass
 
 
