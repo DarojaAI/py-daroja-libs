@@ -261,7 +261,7 @@ def test_concurrent_run_sync_from_running_loop():
     results = asyncio.run(handler())
     elapsed = time.time() - start
     assert len(results) == 5
-    assert all(r == [{"id": f"row-{i+1}"}] for i, r in enumerate(results))
+    assert all(r == [{"id": f"row-{i + 1}"}] for i, r in enumerate(results))
     assert len(fake.awaits) == 5
     # Each call should be fast (a few ms each, not seconds).
     # Allow generous slack for CI overhead.

@@ -1138,9 +1138,9 @@ class TestBackendDispatch:
 
         # pool.execute must be called with the original $1, $2 SQL
         call_args = cm.execute.call_args
-        assert call_args[0][0] == "SELECT $1, $2", (
-            f"translator must NOT be applied for asyncpg; " f"got {call_args[0][0]!r}"
-        )
+        assert (
+            call_args[0][0] == "SELECT $1, $2"
+        ), f"translator must NOT be applied for asyncpg; got {call_args[0][0]!r}"
         assert call_args[0][1] == 1
         assert call_args[0][2] == 2
 
