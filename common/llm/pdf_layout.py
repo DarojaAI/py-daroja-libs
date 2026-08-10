@@ -111,7 +111,6 @@ def find_page_breaks(text: str, config: LayoutConfig | None = None) -> list[int]
 
     lines = text.split("\n")
     breaks: list[int] = []
-    current_line = 0
     lines_on_page = 0
 
     for i, line in enumerate(lines):
