@@ -1,6 +1,5 @@
 """Tests for common.llm.pdf_layout — page layout estimation."""
 
-import pytest
 from common.llm.pdf_layout import estimate_lines, estimate_pages, find_page_breaks, LayoutConfig
 
 
