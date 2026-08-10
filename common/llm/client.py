@@ -650,7 +650,22 @@ class OpenAICompatibleClient(LLMClient):
 
             content = ""
             if data.get("choices") and len(data["choices"]) > 0:
-                content = data["choices"][0].get("message", {}).get("content", "")
+                message = data["choices"][0].get("message", {})
+                # Some OpenRouter providers (e.g. minimax/minimax-m3) return
+                # `content: null` when their reasoning_tokens consumed the
+                # full max_tokens budget. The .get(..., "") default doesn't
+                # catch this because the key exists but is JSON null. Coerce
+                # None to "" so callers that call .lstrip() don't crash.
+                raw_content = message.get("content")
+                content = raw_content if isinstance(raw_content, str) else ""
+                # If content is empty but the model emitted a separate
+                # `reasoning` field (reasoning models), fall back to it so
+                # the work isn't lost. The reasoning text may not be the
+                # final answer — callers that need strict separation should
+                # inspect message["reasoning"] / message["reasoning_details"]
+                # themselves; this fallback exists for consumer convenience.
+                if not content and message.get("reasoning"):
+                    content = "[reasoning] " + message["reasoning"]
 
             return LLMResponse(
                 content=content,
