@@ -113,7 +113,6 @@ def find_page_breaks(text: str, config: LayoutConfig | None = None) -> list[int]
     lines_on_page = 0
 
     for i, line in enumerate(lines):
-        line_count = 1
         if line.startswith("#"):
             line_count = 2
         elif not line.strip():
