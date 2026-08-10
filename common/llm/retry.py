@@ -58,6 +58,9 @@ def retry_with_backoff(
         The last exception if all retries are exhausted, or the
         original exception immediately if it's non-retryable.
     """
+    if max_retries < 1:
+        raise ValueError("max_retries must be >= 1")
+
     last_error = None
     for attempt in range(max_retries):
         try:
@@ -87,4 +90,4 @@ def retry_with_backoff(
                     exc,
                 )
                 raise
-    raise last_error  # Should be unreachable
+    raise RuntimeError("retry_with_backoff reached an unexpected state")
