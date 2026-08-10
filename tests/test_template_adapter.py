@@ -74,7 +74,7 @@ class TestAdaptTemplate:
 
     def test_create_message_fallback(self):
         template = FakeTemplate()
-        client = MagicMock()
+        client = MagicMock(spec=["create_message"])
         response = MagicMock()
         response.content = '{"section1": "A", "section2": "B"}'
         client.create_message.return_value = response
