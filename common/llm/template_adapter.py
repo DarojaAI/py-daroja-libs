@@ -155,10 +155,7 @@ def adapt_template(
 
     schema = {
         "type": "object",
-        "properties": {
-            name: {"type": "string"}
-            for name in template.placeholders
-        },
+        "properties": {name: {"type": "string"} for name in template.placeholders},
         "required": list(template.placeholders),
         "additionalProperties": False,
     }
@@ -188,7 +185,9 @@ def adapt_template(
             content = getattr(response, "content", str(response))
             parsed = json.loads(content)
         else:
-            raise ValueError("llm_client must have generate_json or create_message method")
+            raise ValueError(
+                "llm_client must have generate_json or create_message method"
+            )
     except (json.JSONDecodeError, ValueError) as exc:
         schema_violations.append(f"JSON parse error: {exc}")
         parsed = {}

@@ -67,7 +67,7 @@ def retry_with_backoff(
                 raise  # Non-retryable
 
             if attempt < max_retries - 1:
-                delay = initial_delay * (2 ** attempt)
+                delay = initial_delay * (2**attempt)
                 logger.warning(
                     "[%s] Attempt %d/%d failed: %s. Retrying in %.1fs ...",
                     description,

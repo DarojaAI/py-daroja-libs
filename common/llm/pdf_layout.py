@@ -68,7 +68,11 @@ def estimate_lines(text: str, config: LayoutConfig | None = None) -> int:
             total_lines += 1
         else:
             # Account for line wrapping
-            wrapped = max(1, len(line) // config.chars_per_line + (1 if len(line) % config.chars_per_line else 0))
+            wrapped = max(
+                1,
+                len(line) // config.chars_per_line
+                + (1 if len(line) % config.chars_per_line else 0),
+            )
             total_lines += wrapped
 
     return total_lines
@@ -118,7 +122,11 @@ def find_page_breaks(text: str, config: LayoutConfig | None = None) -> list[int]
         elif not line.strip():
             line_count = 1
         else:
-            wrapped = max(1, len(line) // config.chars_per_line + (1 if len(line) % config.chars_per_line else 0))
+            wrapped = max(
+                1,
+                len(line) // config.chars_per_line
+                + (1 if len(line) % config.chars_per_line else 0),
+            )
             line_count = wrapped
 
         if lines_on_page + line_count > config.lines_per_page:

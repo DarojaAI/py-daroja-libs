@@ -274,8 +274,7 @@ class AsyncpgBackend:
                         or "tls" in err_text
                     ):
                         logger.warning(
-                            "Detected SSL-related failure, retrying once "
-                            "with ssl=False"
+                            "Detected SSL-related failure, retrying once with ssl=False"
                         )
                         try:
                             self.pool = await asyncio.wait_for(
@@ -312,8 +311,7 @@ class AsyncpgBackend:
                 # Verify pgvector extension is available
                 async with self.pool.acquire() as conn:
                     result = await conn.fetchrow(
-                        "SELECT extversion FROM pg_extension "
-                        "WHERE extname = 'vector'"
+                        "SELECT extversion FROM pg_extension WHERE extname = 'vector'"
                     )
                     if result:
                         logger.info(
@@ -327,7 +325,7 @@ class AsyncpgBackend:
 
             except Exception as e:
                 logger.error(
-                    f"Failed to connect to PostgreSQL " f"(attempt {attempt}): {e}"
+                    f"Failed to connect to PostgreSQL (attempt {attempt}): {e}"
                 )
                 try:
                     if self.pool is not None:
@@ -338,7 +336,7 @@ class AsyncpgBackend:
 
                 if attempt == max_attempts:
                     logger.error(
-                        "Exceeded max connection attempts to PostgreSQL " "— giving up"
+                        "Exceeded max connection attempts to PostgreSQL — giving up"
                     )
                     raise
 
@@ -370,7 +368,7 @@ class AsyncpgBackend:
             async with self.pool.acquire() as conn:
                 version = await conn.fetchval("SELECT version()")
                 pgvector = await conn.fetchrow(
-                    "SELECT extversion FROM pg_extension " "WHERE extname = 'vector'"
+                    "SELECT extversion FROM pg_extension WHERE extname = 'vector'"
                 )
             host = self._config.host if self._config else None
             database = self._config.database if self._config else None

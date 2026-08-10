@@ -49,7 +49,9 @@ def extract_response_from_reasoning(content: str) -> str:
         parts = content.split(_THINK_CLOSE)
         if len(parts) > 1:
             extracted = parts[-1].strip()
-            logger.debug("Stripped think tags, response length: %d chars", len(extracted))
+            logger.debug(
+                "Stripped think tags, response length: %d chars", len(extracted)
+            )
             return extracted
 
     # Method 2: Already clean JSON

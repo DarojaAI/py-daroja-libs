@@ -1,6 +1,11 @@
 """Tests for common.llm.pdf_layout — page layout estimation."""
 
-from common.llm.pdf_layout import estimate_lines, estimate_pages, find_page_breaks, LayoutConfig
+from common.llm.pdf_layout import (
+    estimate_lines,
+    estimate_pages,
+    find_page_breaks,
+    LayoutConfig,
+)
 
 
 class TestEstimateLines:
@@ -64,7 +69,9 @@ class TestFindPageBreaks:
         assert len(breaks) >= 1
 
     def test_avoid_orphan_heading(self):
-        config = LayoutConfig(lines_per_page=5, chars_per_line=80, min_lines_for_section=4)
+        config = LayoutConfig(
+            lines_per_page=5, chars_per_line=80, min_lines_for_section=4
+        )
         # 4 lines, then a heading that would be orphaned
         text = "\n".join(["line"] * 4) + "\n# Heading\ncontent"
         breaks = find_page_breaks(text, config)
@@ -80,7 +87,9 @@ class TestLayoutConfig:
         assert config.min_lines_for_section == 4
 
     def test_custom_values(self):
-        config = LayoutConfig(lines_per_page=50, chars_per_line=80, min_lines_for_section=6)
+        config = LayoutConfig(
+            lines_per_page=50, chars_per_line=80, min_lines_for_section=6
+        )
         assert config.lines_per_page == 50
         assert config.chars_per_line == 80
         assert config.min_lines_for_section == 6

@@ -128,9 +128,9 @@ async def test_pool_has_statement_timeout_in_server_settings():
         mock_create_pool.return_value = fake_pool
         await mgr.connect()
 
-    assert (
-        mock_create_pool.await_count == 1
-    ), "connect() must call asyncpg.create_pool exactly once on the happy path"
+    assert mock_create_pool.await_count == 1, (
+        "connect() must call asyncpg.create_pool exactly once on the happy path"
+    )
 
     kwargs = mock_create_pool.call_args.kwargs
     assert "server_settings" in kwargs, (
@@ -138,9 +138,9 @@ async def test_pool_has_statement_timeout_in_server_settings():
         f"{sorted(kwargs.keys())}"
     )
     server_settings = kwargs["server_settings"]
-    assert isinstance(
-        server_settings, dict
-    ), f"`server_settings` must be a dict (asyncpg requirement); got {type(server_settings).__name__}"
+    assert isinstance(server_settings, dict), (
+        f"`server_settings` must be a dict (asyncpg requirement); got {type(server_settings).__name__}"
+    )
     assert "statement_timeout" in server_settings, (
         f"`server_settings` must contain 'statement_timeout'; got keys: "
         f"{sorted(server_settings.keys())}"

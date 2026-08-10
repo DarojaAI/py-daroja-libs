@@ -527,8 +527,7 @@ class DatabaseManager:
                 if attempt == max_retries:
                     raise
                 logger.warning(
-                    f"DB transient error, retrying "
-                    f"({attempt + 1}/{max_retries}): {e}"
+                    f"DB transient error, retrying ({attempt + 1}/{max_retries}): {e}"
                 )
                 await asyncio.sleep(0.5 * (2**attempt))
             except asyncio.CancelledError:
@@ -915,7 +914,7 @@ class DatabaseManager:
             self._loop_thread.start()
             if not self._loop_started.wait(timeout=5.0):
                 raise RuntimeError(
-                    "DatabaseManager loop thread did not signal " "ready within 5s"
+                    "DatabaseManager loop thread did not signal ready within 5s"
                 )
             if self._loop_failed is not None:
                 raise RuntimeError(
@@ -1035,7 +1034,7 @@ class DatabaseManager:
                 f"values; got row lengths {[len(r) for r in rows]}"
             )
         cols = ", ".join(columns)
-        placeholders = ", ".join(f"${i+1}" for i in range(n))
+        placeholders = ", ".join(f"${i + 1}" for i in range(n))
         sql = f"INSERT INTO {table} ({cols}) VALUES ({placeholders})"
         if on_conflict:
             sql += f" {on_conflict}"
@@ -1051,9 +1050,7 @@ class DatabaseManager:
             try:
                 total += int(result.rsplit(" ", 1)[-1])
             except (ValueError, IndexError):
-                logger.debug(
-                    f"bulk_insert: could not parse row count from " f"{result!r}"
-                )
+                logger.debug(f"bulk_insert: could not parse row count from {result!r}")
         return f"INSERT 0 {total}"
 
     def bulk_insert_sync(

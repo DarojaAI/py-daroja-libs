@@ -1114,12 +1114,12 @@ class TestBackendDispatch:
 
         called_sql = mock.execute.call_args[0][0]
         # The translated SQL must have %s, %s, %s — NOT $1, $2, $3
-        assert (
-            "$" not in called_sql
-        ), f"translator failed: $N placeholders remain in {called_sql!r}"
-        assert (
-            called_sql.count("%s") == 3
-        ), f"expected 3 %s placeholders, got {called_sql!r}"
+        assert "$" not in called_sql, (
+            f"translator failed: $N placeholders remain in {called_sql!r}"
+        )
+        assert called_sql.count("%s") == 3, (
+            f"expected 3 %s placeholders, got {called_sql!r}"
+        )
 
     def test_translator_is_NOT_applied_for_asyncpg(self, backend):
         """For asyncpg, the SQL passes through unchanged.
@@ -1139,7 +1139,7 @@ class TestBackendDispatch:
         # pool.execute must be called with the original $1, $2 SQL
         call_args = cm.execute.call_args
         assert call_args[0][0] == "SELECT $1, $2", (
-            f"translator must NOT be applied for asyncpg; " f"got {call_args[0][0]!r}"
+            f"translator must NOT be applied for asyncpg; got {call_args[0][0]!r}"
         )
         assert call_args[0][1] == 1
         assert call_args[0][2] == 2
