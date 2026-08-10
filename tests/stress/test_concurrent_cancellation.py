@@ -278,9 +278,9 @@ class TestConcurrentCancellation:
             results: List[Tuple[int, str]] = [f.result() for f in done]
 
         assert len(done) == N, f"Only {len(done)}/{N} completed"
-        assert any(r[1].startswith("ok:") for r in results), (
-            f"No queries succeeded: {results}"
-        )
+        assert any(
+            r[1].startswith("ok:") for r in results
+        ), f"No queries succeeded: {results}"
         # Manager still healthy
         health = db_manager.health_check_sync()
         assert health.get("status") in ("healthy", "disabled")
