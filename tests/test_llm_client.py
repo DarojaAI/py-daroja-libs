@@ -174,6 +174,55 @@ class TestOpenAICompatibleClient:
         )
         assert client.base_url == "http://localhost:8000/v1"
 
+    @patch("requests.post")
+    def test_null_content_coerced_to_empty_string(self, mock_post):
+        """Reasoning models (e.g. minimax/minimax-m3) may return content: null
+        when their reasoning_tokens exhaust the max_tokens budget. The
+        response.content field must coerce None to '' so downstream callers
+        can call .lstrip() without crashing. Regression test for the failure
+        observed in doc-improvement --use-llm runs against research-orchestrator.
+        """
+        from common.llm import OpenAICompatibleClient
+
+        body = {
+            "choices": [{
+                "message": {"content": None, "reasoning": "thought process..."},
+                "finish_reason": "length",
+            }],
+            "model": "minimax/minimax-m3",
+            "usage": {"prompt_tokens": 100, "completion_tokens": 2000},
+        }
+        mock_post.return_value = _make_mock_response(body=body)
+        client = OpenAICompatibleClient(api_key="test-key")
+        resp = client.create_message(
+            model="minimax/minimax-m3",
+            messages=[{"role": "user", "content": "hi"}],
+        )
+        # None is coerced to empty string (not crashed, not None)
+        assert isinstance(resp.content, str)
+        assert resp.content == "[reasoning] thought process..."
+
+    @patch("requests.post")
+    def test_null_content_no_reasoning_returns_empty_string(self, mock_post):
+        """If both content and reasoning are absent, return '' silently."""
+        from common.llm import OpenAICompatibleClient
+
+        body = {
+            "choices": [{
+                "message": {"content": None},
+                "finish_reason": "length",
+            }],
+            "model": "test-model",
+            "usage": {"prompt_tokens": 100, "completion_tokens": 2000},
+        }
+        mock_post.return_value = _make_mock_response(body=body)
+        client = OpenAICompatibleClient(api_key="test-key")
+        resp = client.create_message(
+            model="test-model",
+            messages=[{"role": "user", "content": "hi"}],
+        )
+        assert resp.content == ""
+
     def test_model_required(self):
         """create_message raises ValueError if model is empty."""
         from common.llm import OpenAICompatibleClient
