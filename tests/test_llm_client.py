@@ -186,12 +186,10 @@ class TestOpenAICompatibleClient:
         from common.llm import OpenAICompatibleClient
 
         body = {
-            "choices": [
-                {
-                    "message": {"content": None, "reasoning": "thought process..."},
-                    "finish_reason": "length",
-                }
-            ],
+            "choices": [{
+                "message": {"content": None, "reasoning": "thought process..."},
+                "finish_reason": "length",
+            }],
             "model": "minimax/minimax-m3",
             "usage": {"prompt_tokens": 100, "completion_tokens": 2000},
         }
@@ -211,12 +209,10 @@ class TestOpenAICompatibleClient:
         from common.llm import OpenAICompatibleClient
 
         body = {
-            "choices": [
-                {
-                    "message": {"content": None},
-                    "finish_reason": "length",
-                }
-            ],
+            "choices": [{
+                "message": {"content": None},
+                "finish_reason": "length",
+            }],
             "model": "test-model",
             "usage": {"prompt_tokens": 100, "completion_tokens": 2000},
         }
