@@ -144,13 +144,136 @@ class EmbeddingResponse:
 
 
 @dataclass
+class ToolCall:
+    """A single tool/function call requested by the model.
+
+    This is a provider-agnostic representation.  Both Anthropic and
+    OpenAI-style (OpenRouter) providers normalize their native tool-call
+    shapes into this structure.
+
+    Attributes:
+        id: Provider-assigned identifier for this tool call.  Used in the
+            follow-up ``tool`` / ``tool_results`` message to correlate
+            responses.
+        name: Name of the tool / function being invoked.
+        arguments: Parsed arguments dict.  Anthropic ``input`` blocks are
+            already dicts; OpenAI ``function.arguments`` is a JSON string
+            that gets ``json.loads``-ed here.  An empty ``dict`` is used
+            when the model provides no arguments.
+    """
+
+    id: str
+    name: str
+    arguments: Dict[str, Any]
+
+
+@dataclass
+class ToolResult:
+    """Provider-agnostic tool execution result.
+
+    Use with :func:`build_tool_result_messages` to convert a list of these
+    into provider-specific message dicts for the follow-up turn.
+
+    Attributes:
+        tool_call_id: The ``id`` from the :class:`ToolCall` that triggered
+            this execution.  Providers correlate responses to calls via
+            this identifier.
+        content: The result of executing the tool.  Typically a JSON string
+            or plain text, depending on the tool.
+    """
+
+    tool_call_id: str
+    content: str
+
+
+def build_tool_result_messages(
+    tool_results: List[ToolResult],
+    provider: str,
+) -> List[Dict[str, Any]]:
+    """Convert provider-agnostic tool results into provider-specific messages.
+
+    Each provider uses a different message format for returning tool
+    execution results:
+
+    - **Anthropic**: ``{"role": "user", "content": [{"type": "tool_result",
+      "tool_use_id": ..., "content": ...}]}``
+    - **OpenAI / OpenRouter / Azure**: ``{"role": "tool", "tool_call_id": ...,
+      "content": ...}``
+
+    Args:
+        tool_results: List of :class:`ToolResult` objects to convert.
+        provider: Provider name — one of ``"anthropic"``, ``"openai"``,
+            ``"azure"``, ``"openrouter"``, ``"openai-compatible"``,
+            or ``"azure-openai"``.  Case-insensitive.
+
+    Returns:
+        List of message dicts to append to the ``messages=`` list before
+        the next ``create_message`` call.  For Anthropic, this is a single
+        message containing all tool results as content blocks.  For
+        OpenAI-style providers, each tool result becomes its own message.
+
+    Raises:
+        ValueError: Unknown provider name.
+
+    Example::
+
+        results = [
+            ToolResult(tool_call_id="call_abc", content='{"temp": 72}'),
+        ]
+        msgs = build_tool_result_messages(results, provider="openai")
+        # msgs == [{"role": "tool", "tool_call_id": "call_abc",
+        #           "content": '{"temp": 72}'}]
+    """
+    provider_key = provider.lower().strip().replace(" ", "-").replace("_", "-")
+
+    if provider_key in ("anthropic",):
+        # Anthropic expects a single user message with a list of content blocks
+        content_blocks = []
+        for tr in tool_results:
+            content_blocks.append(
+                {
+                    "type": "tool_result",
+                    "tool_use_id": tr.tool_call_id,
+                    "content": tr.content,
+                }
+            )
+        return [{"role": "user", "content": content_blocks}]
+
+    elif provider_key in (
+        "openai",
+        "openrouter",
+        "azure",
+        "openai-compatible",
+        "azure-openai",
+    ):
+        # OpenAI-style: each tool result is its own message
+        return [
+            {
+                "role": "tool",
+                "tool_call_id": tr.tool_call_id,
+                "content": tr.content,
+            }
+            for tr in tool_results
+        ]
+
+    else:
+        raise ValueError(
+            f"Unknown provider for build_tool_result_messages: {provider!r}. "
+            f"Supported: anthropic, openai, openrouter, azure, openai-compatible, "
+            f"azure-openai"
+        )
+
+
+@dataclass
 class LLMResponse:
     """Response wrapper for ``create_message``.
 
     Attributes:
         content: The model's text response. Empty string if the model
             returned no content (e.g. ``finish_reason="length"`` with
-            nothing generated yet).
+            nothing generated yet).  When the model invokes a tool,
+            ``content`` may be empty or contain a text explanation that
+            accompanies the tool calls.
         model: The model identifier echoed back by the provider
             (may include provider-side suffixes or aliases).
         stop_reason: Why the model stopped generating. Common values:
@@ -162,12 +285,19 @@ class LLMResponse:
             ``"output_tokens"``, or ``None`` if the provider did not
             return usage. Consumers wiring up a token tracker should
             read both fields and sum them for total cost tracking.
+        tool_calls: List of tool/function calls requested by the model,
+            or ``None`` when the response contains no tool invocations.
+            Each entry is a :class:`ToolCall` with ``id``, ``name``,
+            and ``arguments``.  Callers should check ``tool_calls``
+            before ``content`` when ``stop_reason`` is ``"tool_use"``
+            / ``"tool_calls"``.
     """
 
     content: str
     model: str
     stop_reason: Optional[str] = None
     usage: Optional[Dict[str, int]] = None
+    tool_calls: Optional[List[ToolCall]] = None
 
 
 class LLMClient(ABC):
@@ -433,7 +563,25 @@ class AnthropicClient(LLMClient):
         temperature: float = 0.7,
         **kwargs,
     ) -> LLMResponse:
-        """Create a message via Anthropic API"""
+        """Create a message via Anthropic API.
+
+        Supports tool-use (function calling) when ``tools=`` is passed in
+        ``**kwargs``.  Tool definitions follow Anthropic's native shape:
+
+        .. code-block:: python
+
+            tools=[{
+                "name": "get_weather",
+                "description": "Get current weather",
+                "input_schema": {"type": "object", "properties": {"city": {"type": "string"}}},
+            }]
+
+        The response ``tool_calls`` field contains normalized
+        :class:`ToolCall` objects with ``id``, ``name``, and ``arguments``
+        (the ``input_schema`` dict).  ``tool_choice`` is also forwarded
+        via ``**kwargs`` (e.g. ``tool_choice={"type": "auto"}``).
+
+        """
         try:
             response = self.client.messages.create(
                 model=model or "claude-3-5-sonnet-20241022",
@@ -443,14 +591,35 @@ class AnthropicClient(LLMClient):
                 **kwargs,
             )
 
-            # Extract content from response
+            # NOTE: Verified against Anthropic SDK response shape.
+            # response.content is a list of content blocks; each block has
+            # a .type attribute ('text' or 'tool_use').
             content = ""
+            tool_calls: Optional[List[ToolCall]] = None
+
             if response.content:
-                content = (
-                    response.content[0].text
-                    if hasattr(response.content[0], "text")
-                    else str(response.content[0])
-                )
+                text_parts: List[str] = []
+                tc_parts: List[ToolCall] = []
+                for block in response.content:
+                    if hasattr(block, "type") and block.type == "tool_use":
+                        # ANTHROPIC-TOOL-USE: block has .id, .name, .input
+                        # (verified: anthropic SDK v0.39+ ToolUseBlock)
+                        tc_parts.append(
+                            ToolCall(
+                                id=block.id,
+                                name=block.name,
+                                arguments=block.input
+                                if isinstance(block.input, dict)
+                                else {},
+                            )
+                        )
+                    elif hasattr(block, "text"):
+                        text_parts.append(block.text)
+                    else:
+                        text_parts.append(str(block))
+                content = "\n".join(text_parts)
+                if tc_parts:
+                    tool_calls = tc_parts
 
             return LLMResponse(
                 content=content,
@@ -462,6 +631,7 @@ class AnthropicClient(LLMClient):
                 }
                 if response.usage
                 else None,
+                tool_calls=tool_calls,
             )
         except Exception as e:
             logger.error(f"Anthropic API error: {e}")
@@ -649,6 +819,8 @@ class OpenAICompatibleClient(LLMClient):
             data = response.json()
 
             content = ""
+            tool_calls: Optional[List[ToolCall]] = None
+
             if data.get("choices") and len(data["choices"]) > 0:
                 message = data["choices"][0].get("message", {})
                 # Some OpenRouter providers (e.g. minimax/minimax-m3) return
@@ -667,6 +839,32 @@ class OpenAICompatibleClient(LLMClient):
                 if not content and message.get("reasoning"):
                     content = "[reasoning] " + message["reasoning"]
 
+                # OPENAI-TOOL-USE: tool_calls array on the message object.
+                # Each entry has id, function.name, function.arguments (JSON string).
+                # Verified against OpenAI API docs and OpenRouter proxy behavior.
+                raw_tool_calls = message.get("tool_calls")
+                if raw_tool_calls:
+                    normalized: List[ToolCall] = []
+                    for tc in raw_tool_calls:
+                        fn = tc.get("function", {})
+                        args_raw = fn.get("arguments", "{}")
+                        try:
+                            args = (
+                                json.loads(args_raw)
+                                if isinstance(args_raw, str)
+                                else args_raw
+                            )
+                        except (json.JSONDecodeError, TypeError):
+                            args = {}
+                        normalized.append(
+                            ToolCall(
+                                id=tc.get("id", ""),
+                                name=fn.get("name", ""),
+                                arguments=args,
+                            )
+                        )
+                    tool_calls = normalized
+
             return LLMResponse(
                 content=content,
                 model=data.get("model", model),
@@ -679,6 +877,7 @@ class OpenAICompatibleClient(LLMClient):
                 }
                 if data.get("usage")
                 else None,
+                tool_calls=tool_calls,
             )
         except requests.exceptions.RequestException as e:
             logger.error(f"OpenAI-compatible API error ({self.base_url}): {e}")
@@ -889,7 +1088,14 @@ class OpenAIClient(LLMClient):
         temperature: float = 0.7,
         **kwargs,
     ) -> LLMResponse:
-        """Create a message via the OpenAI SDK."""
+        """Create a message via the OpenAI SDK.
+
+        Supports tool-use (function calling) when ``tools=`` is passed in
+        ``**kwargs``.  Tool definitions follow OpenAI's native shape.  The
+        response ``tool_calls`` field contains normalized :class:`ToolCall`
+        objects with ``id``, ``name``, and ``arguments`` (parsed JSON dict).
+        ``tool_choice`` is also forwarded via ``**kwargs``.
+        """
         try:
             response = self.client.chat.completions.create(
                 model=model or "gpt-4o",
@@ -903,6 +1109,39 @@ class OpenAIClient(LLMClient):
             content = choice.message.content if choice and choice.message else ""
             stop_reason = choice.finish_reason if choice else None
 
+            # OPENAI-SDK-TOOL-USE: The openai SDK returns tool_calls as
+            # ChatCompletionMessageToolCall objects with .id, .function.name,
+            # and .function.arguments (JSON string). We normalize these into
+            # provider-agnostic ToolCall dataclasses, same as the
+            # OpenAICompatibleClient path.
+            # NOTE: Verified against openai SDK v1.x ChatCompletionMessageToolCall
+            tool_calls: Optional[List[ToolCall]] = None
+            if (
+                choice
+                and choice.message
+                and getattr(choice.message, "tool_calls", None)
+            ):
+                tc_parts: List[ToolCall] = []
+                for sdk_tc in choice.message.tool_calls:
+                    fn = sdk_tc.function
+                    args_raw = fn.arguments if hasattr(fn, "arguments") else "{}"
+                    try:
+                        args = (
+                            json.loads(args_raw)
+                            if isinstance(args_raw, str)
+                            else args_raw
+                        )
+                    except (json.JSONDecodeError, TypeError):
+                        args = {}
+                    tc_parts.append(
+                        ToolCall(
+                            id=sdk_tc.id if hasattr(sdk_tc, "id") else "",
+                            name=fn.name if hasattr(fn, "name") else "",
+                            arguments=args,
+                        )
+                    )
+                tool_calls = tc_parts
+
             usage = None
             if response.usage:
                 usage = {
@@ -915,6 +1154,7 @@ class OpenAIClient(LLMClient):
                 model=response.model or model,
                 stop_reason=stop_reason,
                 usage=usage,
+                tool_calls=tool_calls,
             )
         except Exception as e:
             logger.error(f"OpenAI API error: {e}")
@@ -1038,7 +1278,13 @@ class AzureOpenAIClient(LLMClient):
         temperature: float = 0.7,
         **kwargs,
     ) -> LLMResponse:
-        """Create a message via Azure OpenAI."""
+        """Create a message via Azure OpenAI.
+
+        Supports tool-use (function calling) when ``tools=`` is passed in
+        ``**kwargs``.  Uses the same OpenAI SDK under the hood, so tool-call
+        normalization is identical to :class:`OpenAIClient`.  The response
+        ``tool_calls`` field contains normalized :class:`ToolCall` objects.
+        """
         try:
             response = self.client.chat.completions.create(
                 model=self._resolve_model(model),
@@ -1052,6 +1298,37 @@ class AzureOpenAIClient(LLMClient):
             content = choice.message.content if choice and choice.message else ""
             stop_reason = choice.finish_reason if choice else None
 
+            # OPENAI-SDK-TOOL-USE: Same SDK shape as OpenAIClient —
+            # Azure uses the same openai SDK under the hood, so tool_calls
+            # come back as ChatCompletionMessageToolCall objects.
+            # NOTE: Verified against openai SDK v1.x AzureOpenAI path
+            tool_calls: Optional[List[ToolCall]] = None
+            if (
+                choice
+                and choice.message
+                and getattr(choice.message, "tool_calls", None)
+            ):
+                tc_parts: List[ToolCall] = []
+                for sdk_tc in choice.message.tool_calls:
+                    fn = sdk_tc.function
+                    args_raw = fn.arguments if hasattr(fn, "arguments") else "{}"
+                    try:
+                        args = (
+                            json.loads(args_raw)
+                            if isinstance(args_raw, str)
+                            else args_raw
+                        )
+                    except (json.JSONDecodeError, TypeError):
+                        args = {}
+                    tc_parts.append(
+                        ToolCall(
+                            id=sdk_tc.id if hasattr(sdk_tc, "id") else "",
+                            name=fn.name if hasattr(fn, "name") else "",
+                            arguments=args,
+                        )
+                    )
+                tool_calls = tc_parts
+
             usage = None
             if response.usage:
                 usage = {
@@ -1064,6 +1341,7 @@ class AzureOpenAIClient(LLMClient):
                 model=response.model or model,
                 stop_reason=stop_reason,
                 usage=usage,
+                tool_calls=tool_calls,
             )
         except Exception as e:
             logger.error(f"Azure OpenAI API error: {e}")
