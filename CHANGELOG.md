@@ -5,6 +5,13 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Tool-use (function calling) support** in `common.llm.LLMClient.create_message()`. All four providers (Anthropic, OpenAI, Azure OpenAI, OpenRouter/OpenAI-compatible) now normalize native tool-call shapes into a unified `ToolCall` dataclass (`id`, `name`, `arguments`). Pass `tools=` and optionally `tool_choice=` via `**kwargs`; the response `LLMResponse.tool_calls` field contains normalized `ToolCall` objects or `None`. Fully backward-compatible: existing callers that don't pass `tools` see no change. Issue #1204 Phase 2.
+- **`ToolResult` dataclass and `build_tool_result_messages()` helper.** Provider-agnostic `ToolResult(tool_call_id, content)` objects can be converted to provider-specific message dicts via `build_tool_result_messages(results, provider)`. Anthropic returns a single `role: "user"` message with `tool_result` content blocks; OpenAI-style providers return individual `role: "tool"` messages. Issue #1204 Phase 2.
+
 ## [1.7.0] - 2026-06-11
 
 ### Added
