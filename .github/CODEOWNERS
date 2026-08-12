@@ -1,0 +1,19 @@
+# CODEOWNERS — py-daroja-libs
+#
+# Per GOVERNANCE.md §5 (RFC #2 Phase 2), this file designates the library
+# maintainer and known cross-repo consumers.
+#
+# @no_decaf_milan is the per-lib maintainer for py-daroja-libs.
+#
+# Consumers tracked here (verified via gh search code -- 2026-08-12):
+#   DarojaAI/dev-nexus
+#   DarojaAI/rag_research_tool
+#
+# Changes to public API, release workflow, or this CODEOWNERS require review
+# from at least one listed consumer repo maintainer.
+
+# Library owner + primary consumer contacts
+*       @no_decaf_milan
+
+# Consumer-specific review for library API changes
+# (Consumers are notified via GitHub team membership when they are added here)

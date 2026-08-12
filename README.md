@@ -1,6 +1,6 @@
-# devnexus-common
+# py-daroja-libs
 
-Shared Python utilities for DarojaAI projects.
+> **Category:** Shared Libraries & Templates — a shared Python utility library (LLM client, tracing, database helpers) for DarojaAI projects.
 
 ## Installation
 
@@ -12,6 +12,15 @@ With tracing extras:
 ```bash
 pip install -e ".[tracing]"
 ```
+
+## Used by
+
+This library is consumed by the following DarojaAI repos (verified via `gh search code`):
+
+- **`dev-nexus`** — imports `common.llm` (LLM client) and `common.db` (PostgreSQL client) throughout the application and migration scripts.
+- **`rag_research_tool`** — imports `common.llm` (LLM client) and `common.db` (DatabaseManager) across the API, tools, and benchmark layers.
+
+> To report a new consumer or stale entry, open a PR against this README or comment on [issue #78](https://github.com/DarojaAI/py-daroja-libs/issues/78).
 
 ## Modules
 
@@ -178,3 +187,21 @@ log_llm_call(model="gpt-4", prompt="Hello", response="Hi!")
 ## License
 
 MIT
+
+---
+
+## Consumer Guide
+
+### Tag vs. SHA Pinning
+
+When consuming this library via `git+https://` from a fork (e.g. in a private fork or internal fork), **pin to a merge-commit SHA rather than a tag**. Tags in this repo are cut for releases but are not stable pin targets because:
+
+- A tag is a single static ref; it does not track the merge commit that was actually tested.
+- Consumers that pin `git+https://github.com/DarojaAI/py-daroja-libs.git@v1.2.3` will receive whatever commit the tagger pushed at tag time, which may predate unreleased changes.
+
+Instead, pin like:
+```
+git+https://github.com/DarojaAI/py-daroja-libs.git@<merge-commit-sha>
+```
+
+where `<merge-commit-sha>` is the SHA of the merge commit that passed CI on `main`. This ensures the exact tested state.
