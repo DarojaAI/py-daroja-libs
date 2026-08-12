@@ -13,6 +13,20 @@ if root_str not in sys.path:
 
 
 # ---------------------------------------------------------------------------
+# Pytest markers
+# ---------------------------------------------------------------------------
+
+
+def pytest_configure(config):
+    """Register custom markers so ``-m integration`` filters cleanly."""
+    config.addinivalue_line(
+        "markers",
+        "integration: marks tests as integration (real network/API calls); "
+        "deselect with -m 'not integration' for fast unit runs",
+    )
+
+
+# ---------------------------------------------------------------------------
 # Mock optional SDKs for CI
 # ---------------------------------------------------------------------------
 # CI does not install ``openai`` or ``anthropic``.  We inject stub modules

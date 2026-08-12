@@ -11,6 +11,7 @@ Covers:
 7. Anthropic client — unchanged (regression guard)
 """
 
+import os
 from dataclasses import dataclass
 from unittest.mock import MagicMock, patch
 
@@ -814,3 +815,90 @@ class TestEmbedding:
         client = DummyClient()
         with pytest.raises(NotImplementedError, match="does not support embeddings"):
             client.embed(model="m", input=["x"])
+
+
+# ---------------------------------------------------------------------------
+# Real-call smoke test: deepseek-v4-pro via OpenRouter
+# ---------------------------------------------------------------------------
+# Regression guard for the deepseek-v4-pro path added to llm_client.py.
+# This is an INTEGRATION test (real HTTP call) — deselect with
+# ``pytest -m "not integration"`` for fast unit runs. Skipped gracefully
+# when ``OPENROUTER_API_KEY`` is not set so CI without secrets still works.
+
+
+@pytest.mark.integration
+class TestDeepseekV4ProSmoke:
+    """End-to-end smoke test: real call through OpenRouter to deepseek-v4-pro."""
+
+    MODEL = (
+        "deepseek/deepseek-chat"  # canonical OpenRouter slug; v4-pro aliases to this
+    )
+    PROMPT = (
+        "Reply with the word 'pong' and nothing else. No punctuation, no whitespace."
+    )
+    MAX_TOKENS = 16
+
+    @pytest.fixture(autouse=True)
+    def _require_openrouter_key(self):
+        if not os.environ.get("OPENROUTER_API_KEY"):
+            pytest.skip("OPENROUTER_API_KEY not set; skipping real-call smoke test")
+
+    def test_real_call_returns_parseable_content(self):
+        """Real call to deepseek-v4-pro returns non-empty parseable content."""
+        from common.llm import get_llm_client
+
+        client = get_llm_client(
+            provider="openrouter",
+            api_key=os.environ["OPENROUTER_API_KEY"],
+            model=self.MODEL,
+            http_referer="https://github.com/DarojaAI/py-daroja-libs",
+            x_title="py-daroja-libs-smoke",
+        )
+
+        import time
+
+        start = time.monotonic()
+        resp = client.create_message(
+            model=self.MODEL,
+            messages=[{"role": "user", "content": self.PROMPT}],
+            max_tokens=self.MAX_TOKENS,
+            temperature=0.0,
+        )
+        elapsed = time.monotonic() - start
+
+        # response shape: LLMResponse dataclass
+        assert resp is not None
+        assert isinstance(
+            resp.content, str
+        ), f"content must be str, got {type(resp.content).__name__}: {resp.content!r}"
+        assert resp.content.strip(), "content must be non-empty"
+
+        # model tag echoed by OpenRouter should contain "deepseek"
+        assert (
+            "deepseek" in resp.model.lower()
+        ), f"response.model should mention deepseek, got {resp.model!r}"
+
+        # Should complete in well under 60s for a 16-token call
+        assert elapsed < 60.0, f"call took {elapsed:.1f}s, expected <60s"
+
+    def test_real_call_via_factory_from_config(self):
+        """Same call via get_llm_client_from_config with a dataclass config."""
+        from common.llm import get_llm_client_from_config
+
+        @dataclass
+        class SmokeConfig:
+            llm_provider: str = "openrouter"
+            openrouter_api_key: str = os.environ.get("OPENROUTER_API_KEY", "")
+            llm_model: str = "deepseek/deepseek-chat"
+            http_referer: str = "https://github.com/DarojaAI/py-daroja-libs"
+            x_title: str = "py-daroja-libs-smoke"
+
+        client = get_llm_client_from_config(SmokeConfig())
+        resp = client.create_message(
+            model="deepseek/deepseek-chat",
+            messages=[{"role": "user", "content": self.PROMPT}],
+            max_tokens=self.MAX_TOKENS,
+            temperature=0.0,
+        )
+        assert resp.content.strip()
+        assert "deepseek" in resp.model.lower()
