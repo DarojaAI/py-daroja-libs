@@ -830,8 +830,12 @@ class TestEmbedding:
 class TestDeepseekV4ProSmoke:
     """End-to-end smoke test: real call through OpenRouter to deepseek-v4-pro."""
 
-    MODEL = "deepseek/deepseek-chat"  # canonical OpenRouter slug; v4-pro aliases to this
-    PROMPT = "Reply with the word 'pong' and nothing else. No punctuation, no whitespace."
+    MODEL = (
+        "deepseek/deepseek-chat"  # canonical OpenRouter slug; v4-pro aliases to this
+    )
+    PROMPT = (
+        "Reply with the word 'pong' and nothing else. No punctuation, no whitespace."
+    )
     MAX_TOKENS = 16
 
     @pytest.fixture(autouse=True)
@@ -864,15 +868,15 @@ class TestDeepseekV4ProSmoke:
 
         # response shape: LLMResponse dataclass
         assert resp is not None
-        assert isinstance(resp.content, str), (
-            f"content must be str, got {type(resp.content).__name__}: {resp.content!r}"
-        )
+        assert isinstance(
+            resp.content, str
+        ), f"content must be str, got {type(resp.content).__name__}: {resp.content!r}"
         assert resp.content.strip(), "content must be non-empty"
 
         # model tag echoed by OpenRouter should contain "deepseek"
-        assert "deepseek" in resp.model.lower(), (
-            f"response.model should mention deepseek, got {resp.model!r}"
-        )
+        assert (
+            "deepseek" in resp.model.lower()
+        ), f"response.model should mention deepseek, got {resp.model!r}"
 
         # Should complete in well under 60s for a 16-token call
         assert elapsed < 60.0, f"call took {elapsed:.1f}s, expected <60s"
