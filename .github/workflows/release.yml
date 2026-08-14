@@ -29,7 +29,7 @@ jobs:
       # v1.0.0 → `fatal: tag 'v1.0.0' already exists`. The dev-nexus Release
       # workflow had the same bug and was inlined in PRs #1069-#1072; the
       # fix didn't propagate to other repos that use the reusable workflow
-      # (devnexus-common, infra-actions, etc.). Inlining here too.
+      # (py-daroja-libs, infra-actions, etc.). Inlining here too.
       #
       # Also: the reusable workflow's `skip-dirty-check: true` was a
       # workaround for its own `npm install --no-save` rewriting tracked

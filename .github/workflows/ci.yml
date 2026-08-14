@@ -1,4 +1,4 @@
-# CI for devnexus-common
+# CI for py-daroja-libs
 #
 # Uses the reusable-standard-ci composite from infra-actions@v1.22.1.
 # Python-only repo, so terraform-version is left empty (terraform-validate

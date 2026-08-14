@@ -8,8 +8,8 @@ merges to `main`, semantic-release cuts a tag (e.g. `v1.9.0`) and this
 workflow publishes a corresponding base image to Artifact Registry:
 
 ```
-${REGION}-docker.pkg.dev/${PROJECT_ID}/devnexus-common/vpc-runner-base:v1.9.0
-${REGION}-docker.pkg.dev/${PROJECT_ID}/devnexus-common/vpc-runner-base:latest
+${REGION}-docker.pkg.dev/${PROJECT_ID}/py-daroja-libs/vpc-runner-base:v1.9.0
+${REGION}-docker.pkg.dev/${PROJECT_ID}/py-daroja-libs/vpc-runner-base:latest
 ```
 
 Consumer repos (dev-nexus, rag-research-tool) then `FROM` the version-pinned
@@ -23,28 +23,28 @@ that pool. So you can skip WIF + SA setup entirely and only do:
 
 ```bash
 # 1. Create the AR repo (one-time)
-gcloud artifacts repositories create devnexus-common \
+gcloud artifacts repositories create py-daroja-libs \
   --repository-format=docker \
   --location=us-central1 \
   --project=globalbiting-dev \
   --description="Shared base images for DarojaAI projects (vpc-runner, etc.)"
 
 # 2. Grant writer to the existing github-actions-deploy SA (AR-repo-scoped, not project-wide)
-gcloud artifacts repositories add-iam-policy-binding devnexus-common \
-  --repository=devnexus-common \
+gcloud artifacts repositories add-iam-policy-binding py-daroja-libs \
+  --repository=py-daroja-libs \
   --location=us-central1 \
   --project=globalbiting-dev \
   --member="serviceAccount:github-actions-deploy@globalbiting-dev.iam.gserviceaccount.com" \
   --role="roles/artifactregistry.writer"
 
 # 3. Set the 4 vars on this repo
-gh variable set GCP_PROJECT_ID   --repo DarojaAI/devnexus-common --body "globalbiting-dev"
-gh variable set GCP_REGION       --repo DarojaAI/devnexus-common --body "us-central1"
-gh variable set GCP_WIF_PROVIDER --repo DarojaAI/devnexus-common --body "projects/665374072631/locations/global/workloadIdentityPools/github-pool/providers/github-provider-daroja"
-gh variable set GCP_PUBLISH_SA   --repo DarojaAI/devnexus-common --body "github-actions-deploy@globalbiting-dev.iam.gserviceaccount.com"
+gh variable set GCP_PROJECT_ID   --repo DarojaAI/py-daroja-libs --body "globalbiting-dev"
+gh variable set GCP_REGION       --repo DarojaAI/py-daroja-libs --body "us-central1"
+gh variable set GCP_WIF_PROVIDER --repo DarojaAI/py-daroja-libs --body "projects/665374072631/locations/global/workloadIdentityPools/github-pool/providers/github-provider-daroja"
+gh variable set GCP_PUBLISH_SA   --repo DarojaAI/py-daroja-libs --body "github-actions-deploy@globalbiting-dev.iam.gserviceaccount.com"
 
 # 4. Run the workflow once via the Actions tab (workflow_dispatch with tag=dev)
-#    — this publishes the first image to devnexus-common/vpc-runner-base:dev.
+#    — this publishes the first image to py-daroja-libs/vpc-runner-base:dev.
 ```
 
 If you're setting this up on a new GCP project or new GitHub org, follow
@@ -55,7 +55,7 @@ the longer path below.
 ### 1. Artifact Registry: create the repo
 
 ```bash
-gcloud artifacts repositories create devnexus-common \
+gcloud artifacts repositories create py-daroja-libs \
   --repository-format=docker \
   --location=us-central1 \
   --project="$PROJECT_ID" \
@@ -71,11 +71,11 @@ You have two options.
 **(a) Reuse an existing SA** if it already has a WIF binding that
 covers this repo. In `globalbiting-dev`, `github-actions-deploy@…` is
 already bound to the org-scoped WIF pool (`attribute.repository_owner=DarojaAI`),
-which accepts tokens from `DarojaAI/devnexus-common`. So we just grant it
+which accepts tokens from `DarojaAI/py-daroja-libs`. So we just grant it
 `roles/artifactregistry.writer` on the new AR repo:
 
 ```bash
-gcloud artifacts repositories add-iam-policy-binding devnexus-common \
+gcloud artifacts repositories add-iam-policy-binding py-daroja-libs \
   --location=us-central1 \
   --project="$PROJECT_ID" \
   --member="serviceAccount:github-actions-deploy@${PROJECT_ID}.iam.gserviceaccount.com" \
@@ -88,15 +88,15 @@ radius. Use this when your WIF provider is repo-scoped (e.g.
 publish workflow inheriting the deploy SA's broader permissions:
 
 ```bash
-SA_NAME="github-publish-devnexus-common"
+SA_NAME="github-publish-py-daroja-libs"
 SA_EMAIL="${SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
 
 gcloud iam service-accounts create "$SA_NAME" \
   --project="$PROJECT_ID" \
-  --display-name="Publish devnexus-common base images from CI"
+  --display-name="Publish py-daroja-libs base images from CI"
 
 # Grant write access — AR-repo-scoped, NOT project-wide
-gcloud artifacts repositories add-iam-policy-binding devnexus-common \
+gcloud artifacts repositories add-iam-policy-binding py-daroja-libs \
   --location=us-central1 \
   --project="$PROJECT_ID" \
   --member="serviceAccount:${SA_EMAIL}" \
@@ -124,7 +124,7 @@ which expects:
 The condition should look something like:
 
 ```
-attribute.repository == "DarojaAI/devnexus-common"
+attribute.repository == "DarojaAI/py-daroja-libs"
 ```
 
 If you also want `workflow_dispatch` runs to be able to publish (e.g. for a
@@ -136,7 +136,7 @@ provider's attribute condition (`attribute.repository_owner=DarojaAI`)
 covers this repo, and `github-actions-deploy` already has the WIF binding.
 Skip unless you're setting up a new project.
 
-### 4. Repo variables: set on DarojaAI/devnexus-common
+### 4. Repo variables: set on DarojaAI/py-daroja-libs
 
 **These are VARIABLES, not secrets.** Settings → Secrets and variables
 → Actions → **Variables** tab → New repository variable. Use `gh variable set`,
@@ -152,8 +152,8 @@ identifiers (project ID, region, WIF provider name, SA email).
 | `GCP_WIF_PROVIDER` | yes | `projects/665374072631/locations/global/workloadIdentityPools/github-pool/providers/github-provider-daroja` | WIF provider resource name. |
 | `GCP_PUBLISH_SA` | yes | `github-actions-deploy@globalbiting-dev.iam.gserviceaccount.com` | SA email that has writer on the AR repo. |
 
-Verify with `gh variable list --repo DarojaAI/devnexus-common` — you should
-see the 4 GCP_* entries. If `gh secret list --repo DarojaAI/devnexus-common`
+Verify with `gh variable list --repo DarojaAI/py-daroja-libs` — you should
+see the 4 GCP_* entries. If `gh secret list --repo DarojaAI/py-daroja-libs`
 shows them instead, they were set in the wrong tab (see troubleshooting).
 
 ### 5. Verify
@@ -165,13 +165,13 @@ throwaway tag, confirm the image lands, then clean up:
 # On the Actions tab: workflow_dispatch → tag=dev (or any non-prod value)
 # After it succeeds:
 gcloud artifacts docker tags list \
-  us-central1-docker.pkg.dev/globalbiting-dev/devnexus-common/vpc-runner-base \
+  us-central1-docker.pkg.dev/globalbiting-dev/py-daroja-libs/vpc-runner-base \
   --format="value(tag,version)"
 # You should see at least :dev and :latest.
 
 # To clean up a throwaway image entirely (e.g. :dev-test-1):
 gcloud artifacts docker tags delete \
-  us-central1-docker.pkg.dev/globalbiting-dev/devnexus-common/vpc-runner-base:dev \
+  us-central1-docker.pkg.dev/globalbiting-dev/py-daroja-libs/vpc-runner-base:dev \
   --quiet
 ```
 
@@ -186,7 +186,7 @@ Dockerfile to `FROM`-ing the published image. The Dockerfile becomes:
 ```dockerfile
 # Set at build time. Pin to a specific tag, not :latest, so builds
 # are reproducible.
-ARG VPC_RUNNER_BASE=us-central1-docker.pkg.dev/globalbiting-dev/devnexus-common/vpc-runner-base:v1.9.0
+ARG VPC_RUNNER_BASE=us-central1-docker.pkg.dev/globalbiting-dev/py-daroja-libs/vpc-runner-base:v1.9.0
 FROM ${VPC_RUNNER_BASE}
 
 WORKDIR /workspace
@@ -206,9 +206,9 @@ the AR region before pulling:
 ```
 
 The consumer's WIF SA (typically the same `github-actions-deploy` as
-above) needs `roles/artifactregistry.reader` on the `devnexus-common` AR
+above) needs `roles/artifactregistry.reader` on the `py-daroja-libs` AR
 repo so it can pull the base. The `DarojaAI/infra-actions/docs/github-actions-wif-setup.md`
-script grants this when run with `CONSUMER_AR_REPO_NAME=devnexus-common`.
+script grants this when run with `CONSUMER_AR_REPO_NAME=py-daroja-libs`.
 
 ## Why WIF, not a service account key
 
@@ -222,7 +222,7 @@ matches what the rest of the DarojaAI org already does (see
 
 - **Consumers must pin to a specific semver tag**, not `:latest`. This
   makes the supply chain auditable — every CI run pulls a known image.
-- **Branch protection on `main` + required reviews on `devnexus-common`**
+- **Branch protection on `main` + required reviews on `py-daroja-libs`**
   gates who can change the Dockerfile that backs the image.
 - **Image signing (cosign)** is a future hardening — see roadmap.
 
@@ -230,14 +230,14 @@ matches what the rest of the DarojaAI org already does (see
 
 - **`Missing required repo variables`** — the `Validate required
   configuration` step prints the missing variable names. First check
-  `gh variable list --repo DarojaAI/devnexus-common` — if the values
+  `gh variable list --repo DarojaAI/py-daroja-libs` — if the values
   aren't there, check `gh secret list` instead. Most common cause:
   setting them as secrets via the GitHub UI Secrets tab. Move them to
   the Variables tab. (Workflow reads `${{ vars.X }}`, never `${{ secrets.X }}`.)
 - **`Permission denied` on `docker push`** — the SA doesn't have
   `roles/artifactregistry.writer` on the AR repo. Re-check step 2.
 - **`Permission denied` on `docker pull` (consumer side)** — consumer's
-  WIF SA lacks `roles/artifactregistry.reader` on `devnexus-common`. Run
+  WIF SA lacks `roles/artifactregistry.reader` on `py-daroja-libs`. Run
   `infra-actions/docs/github-actions-wif-setup.md` again with the right
   `CONSUMER_AR_REPO_*` env vars.
 - **`Invalid authentication credentials`** — the WIF pool doesn't trust

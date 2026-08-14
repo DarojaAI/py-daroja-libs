@@ -1,4 +1,4 @@
-name: devnexus-common stress tests
+name: py-daroja-libs stress tests
 
 # Issues #7/#8: real-PG stress test for the asyncpg
 # concurrent-cancellation segfault pattern. Catches regressions in
@@ -13,7 +13,7 @@ name: devnexus-common stress tests
 # Triggers (issue #987 trim, 2026-08-07):
 #   - pull_request on daroja-coding-agent/* branches: minimal variant
 #     (8-task burst) runs on every PR this agent opens against
-#     devnexus-common. Cheap regression net without burning nightly
+#     py-daroja-libs. Cheap regression net without burning nightly
 #     compute.
 #   - weekly Sunday 06:00 UTC: full minimal variant on both backends.
 #     Catches asyncpg upgrades, pool refactors, or backend changes
@@ -31,7 +31,7 @@ on:
     paths:
       - "common/db/**"
       - "tests/stress/**"
-      - ".github/workflows/devnexus-common-stress.yml"
+      - ".github/workflows/py-daroja-libs-stress.yml"
   schedule:
     - cron: "0 6 * * 0"  # weekly Sunday (was daily; trimmed 2026-08-07)
   workflow_dispatch:

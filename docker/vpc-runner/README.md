@@ -28,11 +28,11 @@ Pick one based on your build-action's capabilities.
 ### Pattern 1 — `FROM` a prebuilt base image (best)
 
 If your project publishes a prebuilt vpc-runner base image to Artifact
-Registry (e.g. `${REGION}-docker.pkg.dev/${PROJECT}/devnexus-common/vpc-runner-base:v1.9.0`),
+Registry (e.g. `${REGION}-docker.pkg.dev/${PROJECT}/py-daroja-libs/vpc-runner-base:v1.9.0`),
 the consumer's `Dockerfile.vpc-runner` is just:
 
 ```dockerfile
-ARG VPC_RUNNER_BASE=us-central1-docker.pkg.dev/globalbiting-dev/devnexus-common/vpc-runner-base:v1.9.0
+ARG VPC_RUNNER_BASE=us-central1-docker.pkg.dev/globalbiting-dev/py-daroja-libs/vpc-runner-base:v1.9.0
 FROM ${VPC_RUNNER_BASE}
 
 WORKDIR /workspace
@@ -48,7 +48,7 @@ CMD ["echo 'VPC Runner ready.'"]
 
 Pros: fastest build, no per-build network calls, layer caching is
 optimal. Cons: requires a separate pipeline to publish the base image on
-release of `devnexus-common`.
+release of `py-daroja-libs`.
 
 ### Pattern 2 — `COPY` the canonical Dockerfile into the build context (pragmatic)
 
@@ -56,7 +56,7 @@ In your build workflow, before `docker build`:
 
 ```bash
 curl -fsSL \
-  "https://raw.githubusercontent.com/DarojaAI/devnexus-common/v1.9.0/docker/vpc-runner/Dockerfile" \
+  "https://raw.githubusercontent.com/DarojaAI/py-daroja-libs/v1.9.0/docker/vpc-runner/Dockerfile" \
   -o Dockerfile.vpc-runner.canonical
 cp Dockerfile.vpc-runner.canonical Dockerfile.vpc-runner.build
 # Append consumer-specific COPYs:
@@ -86,9 +86,9 @@ remember to re-vendor.
 
 Pattern 1 is the right long-term answer. To set it up:
 
-1. Add a release workflow in `devnexus-common` that, on a tagged release,
+1. Add a release workflow in `py-daroja-libs` that, on a tagged release,
    builds this Dockerfile and pushes it to
-   `${REGION}-docker.pkg.dev/${PROJECT}/devnexus-common/vpc-runner-base:${TAG}`.
+   `${REGION}-docker.pkg.dev/${PROJECT}/py-daroja-libs/vpc-runner-base:${TAG}`.
 2. Update each consumer's build workflow to `FROM` the published image.
 3. Update each consumer's `Dockerfile.vpc-runner` to be a thin wrapper
    that adds the project-specific COPYs.
@@ -100,7 +100,7 @@ exists.
 
 - **Base image** (`gcr.io/google.com/cloudsdktool/google-cloud-cli`): pinned
   to a specific version tag inside the Dockerfile. Bump in this file; the
-  bump propagates on the next release of `devnexus-common`.
+  bump propagates on the next release of `py-daroja-libs`.
 - **Terraform / Atlas versions**: ARG defaults in the Dockerfile. Override
   at build time if you need to. When you bump a major version, coordinate
   with other consumers that share Terraform state with you.

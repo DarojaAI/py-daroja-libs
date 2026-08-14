@@ -21,8 +21,8 @@
 #   Secrets: none — auth is via WIF.
 #
 # Image naming:
-#   ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/devnexus-common/vpc-runner-base:${TAG}
-#   ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/devnexus-common/vpc-runner-base:latest
+#   ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/py-daroja-libs/vpc-runner-base:${TAG}
+#   ${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/py-daroja-libs/vpc-runner-base:latest
 #
 # Consumers (dev-nexus, rag-research-tool) pin to the semver tag, not
 # `latest`, so they can audit the exact image that backs their build.
@@ -57,7 +57,7 @@ jobs:
     name: Build and push
     runs-on: ubuntu-latest
     env:
-      AR_REPO: devnexus-common
+      AR_REPO: py-daroja-libs
       IMAGE_NAME: vpc-runner-base
       REGION: ${{ vars.GCP_REGION || 'us-central1' }}
     steps:
@@ -66,7 +66,7 @@ jobs:
         run: |
           cat <<'EOF' >&2
           ::error::Missing required repo variables. Set the following on
-          ::error::DarojaAI/devnexus-common under Settings → Secrets and
+          ::error::DarojaAI/py-daroja-libs under Settings → Secrets and
           ::error::variables → Actions → Variables:
           ::error::  - GCP_PROJECT_ID       (GCP project hosting the AR repo)
           ::error::  - GCP_WIF_PROVIDER     (WIF provider resource name)

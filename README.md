@@ -77,7 +77,7 @@ rows = await db.fetch("SELECT id, name FROM users WHERE active = $1", True)
 - `POSTGRES_PASSWORD` — default `""`
 - `POSTGRES_SSLMODE` — `disable` | `require`
 - `POSTGRES_SSL_NO_VERIFY` — `true` to skip cert verification
-- `POSTGRES_APP_NAME` — default `devnexus-common`
+- `POSTGRES_APP_NAME` — default `py-daroja-libs`
 - `POSTGRES_SEARCH_PATH` — default `public`
 - `USE_POSTGRESQL` — default `true`; set to `false` to disable the client (skip connection on `connect()` and raise on `ensure_connected()`)
 - `POSTGRES_STATEMENT_TIMEOUT_MS` — default `30000` (30s). Applied centrally as a `statement_timeout` server setting on every acquired session so a single runaway query cannot starve the shared pool (issue #686).
@@ -133,9 +133,9 @@ mgr = DatabaseManager(backend="psycopg3", host="...", port=5432, ...)
 To install the psycopg 3 backend:
 
 ```bash
-pip install "devnexus-common[psycopg3]"
+pip install "py-daroja-libs[psycopg3]"
 # For full pgvector support:
-pip install "devnexus-common[psycopg3,pgvector]"
+pip install "py-daroja-libs[psycopg3,pgvector]"
 ```
 
 #### When to switch

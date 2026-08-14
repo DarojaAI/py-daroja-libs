@@ -700,9 +700,9 @@ class OpenAICompatibleClient(LLMClient):
             for callers that don't pass an explicit URL).
         http_referer: ``HTTP-Referer`` header sent to OpenRouter.  Ignored
             for non-OpenRouter endpoints.  Defaults to
-            ``https://github.com/DarojaAI/devnexus-common``.
+            ``https://github.com/DarojaAI/py-daroja-libs``.
         x_title: ``X-Title`` header sent to OpenRouter.  Ignored for
-            non-OpenRouter endpoints.  Defaults to ``devnexus-common``.
+            non-OpenRouter endpoints.  Defaults to ``py-daroja-libs``.
         extra_headers: Additional headers to include in every request.
             ``Authorization`` and ``Content-Type`` are always set by the
             client and should NOT appear here.
@@ -735,8 +735,8 @@ class OpenAICompatibleClient(LLMClient):
         if is_openrouter and api_key:
             self._openrouter_headers = {
                 "HTTP-Referer": http_referer
-                or "https://github.com/DarojaAI/devnexus-common",
-                "X-Title": x_title or "devnexus-common",
+                or "https://github.com/DarojaAI/py-daroja-libs",
+                "X-Title": x_title or "py-daroja-libs",
             }
 
         logger.info(
@@ -1061,7 +1061,7 @@ class OpenAIClient(LLMClient):
             import openai  # noqa: F401
         except ImportError:
             raise ImportError(
-                "openai package required: pip install devnexus-common[openai]"
+                "openai package required: pip install py-daroja-libs[openai]"
             )
 
         api_key = api_key or os.environ.get("OPENAI_API_KEY", "")
@@ -1234,7 +1234,7 @@ class AzureOpenAIClient(LLMClient):
             import openai  # noqa: F401
         except ImportError:
             raise ImportError(
-                "openai package required: pip install devnexus-common[openai]"
+                "openai package required: pip install py-daroja-libs[openai]"
             )
 
         api_key = api_key or os.environ.get("AZURE_OPENAI_KEY", "")

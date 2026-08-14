@@ -42,13 +42,13 @@ Skipping:
     installed — the import is deferred into ``_build_manager`` so the
     asyncpg parametrization still runs on an asyncpg-only install.
     The nightly stress job + manual
-    ``gh workflow run devnexus-common-stress.yml`` runs both
+    ``gh workflow run py-daroja-libs-stress.yml`` runs both
     parametrizations via two jobs (``stress-asyncpg`` and
     ``stress-psycopg3``).
 
 Validation (when first added):
     This test must be verified to **segfault against the pre-fix
-    devnexus-common main** (the bug must be reproducible). Then verify
+    py-daroja-libs main** (the bug must be reproducible). Then verify
     it passes against the fix. If the test doesn't fail against the
     unfixed code, it's a worthless test.
 

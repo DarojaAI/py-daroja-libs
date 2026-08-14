@@ -5,7 +5,7 @@ Ollama, and any other OpenAI-compatible endpoint. One import, one call
 shape, one error model.
 
 This module is the shared LLM client for `dev-nexus`, `rag_research_tool`,
-and future DarojaAI consumers. See [devnexus-common `README.md`](../../README.md)
+and future DarojaAI consumers. See [py-daroja-libs `README.md`](../../README.md)
 for the wider library context.
 
 ---
@@ -271,7 +271,7 @@ an Args / Returns / Raises docstring.
 ## Adding a new provider
 
 If you need a provider that isn't covered (e.g. AWS Bedrock, Cohere,
-Google Vertex), open an issue in `DarojaAI/devnexus-common` rather than
+Google Vertex), open an issue in `DarojaAI/py-daroja-libs` rather than
 forking the client. The migration usually fits one of two patterns:
 
 1. **OpenAI-compatible** — your provider exposes `/v1/chat/completions`.
@@ -286,4 +286,4 @@ forking the client. The migration usually fits one of two patterns:
 
 - [`rag_research_tool` consumer guide](https://github.com/DarojaAI/rag_research_tool/blob/main/docs/llm-client.md)
   — the canonical pattern for new LLM call sites in `rag_research_tool`.
-- `devnexus-common` `README.md` — the wider shared library.
+- `py-daroja-libs` `README.md` — the wider shared library.

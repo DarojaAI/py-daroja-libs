@@ -11,14 +11,14 @@ and push-subscribe to the shared Cloud Run URL.
 ## Install
 
 ```bash
-pip install "devnexus-common[notifications]"
+pip install "py-daroja-libs[notifications]"
 ```
 
 Or, to ship this as a container:
 
 ```bash
 FROM python:3.11-slim
-RUN pip install "devnexus-common[notifications]"
+RUN pip install "py-daroja-libs[notifications]"
 CMD ["uvicorn", "common.notifications:app", "--host", "0.0.0.0", "--port", "8080"]
 ```
 
@@ -49,7 +49,7 @@ curl -X POST http://localhost:8080/push \
 ```hcl
 # shared-notifier-project/main.tf
 module "notifier" {
-  source              = "github.com/DarojaAI/devnexus-common//common/notifications/terraform"
+  source              = "github.com/DarojaAI/py-daroja-libs//common/notifications/terraform"
   project_id          = "shared-notifier-project"
   app_name            = "gcp-discord-notifier"
   discord_webhook_url = var.discord_webhook_url
@@ -66,7 +66,7 @@ output "notifier_url" {
 ```hcl
 # my-app-project/main.tf
 module "build_notifications" {
-  source                = "github.com/DarojaAI/devnexus-common//common/notifications/terraform"
+  source                = "github.com/DarojaAI/py-daroja-libs//common/notifications/terraform"
   project_id            = "my-app-project"
   app_name              = "my-app"
   discord_webhook_url   = var.discord_webhook_url
