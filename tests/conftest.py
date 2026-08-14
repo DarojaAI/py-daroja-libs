@@ -1,4 +1,4 @@
-"""Pytest configuration and shared fixtures for the devnexus-common test suite."""
+"""Pytest configuration and shared fixtures for the py-daroja-libs test suite."""
 
 import sys
 from pathlib import Path

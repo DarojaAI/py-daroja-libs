@@ -282,7 +282,7 @@ class DatabaseManager:
         self.enabled = os.getenv("USE_POSTGRESQL", "true").lower() == "true"
 
         self._application_name = (
-            application_name or os.getenv("POSTGRES_APP_NAME", "devnexus-common")
+            application_name or os.getenv("POSTGRES_APP_NAME", "py-daroja-libs")
         ).strip()
         self._search_path = (
             search_path or os.getenv("POSTGRES_SEARCH_PATH", "public")
@@ -953,7 +953,7 @@ class DatabaseManager:
         (the DB call's wall time is added to the caller's
         coroutine's elapsed time), but it is a small, bounded
         cost (a few ms for the typical PG round-trip in
-        devnexus-common) and unblocks the FastAPI routers
+        py-daroja-libs) and unblocks the FastAPI routers
         that previously raised ``RuntimeError`` and silently fell
         back to the disk cache (the source of the audit's
         "successful but not persisted" mystery).

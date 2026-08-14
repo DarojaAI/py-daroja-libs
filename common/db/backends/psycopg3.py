@@ -233,7 +233,7 @@ def _build_pool_kwargs(config: BackendConfig) -> dict:
         raise ImportError(
             "psycopg 3 is not installed; the 'psycopg3' backend requires "
             "the 'psycopg[binary,pool]' (or equivalent) package. Install "
-            "it via the devnexus-common[psycopg3] extra (Phase 3) or "
+            "it via the py-daroja-libs[psycopg3] extra (Phase 3) or "
             "pin psycopg>=3.1 and psycopg_pool>=3.2 directly."
         )
 
@@ -444,7 +444,7 @@ class Psycopg3Backend:
         # containers, serverless cold starts, fresh DB clusters where
         # initdb + first connection + TLS handshake have to fit in
         # the budget). 30s was confirmed too short on the
-        # devnexus-common-stress.yml job (PR #73) where the psycopg 3
+        # py-daroja-libs-stress.yml job (PR #73) where the psycopg 3
         # path timed out with "couldn't get a connection after 30.00
         # sec" while the asyncpg path on the same container succeeded.
         # 60s gives the cold-start room without making genuinely-broken

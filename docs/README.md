@@ -1,7 +1,7 @@
-# devnexus-common documentation
+# py-daroja-libs documentation
 
 This directory hosts cross-cutting documentation for the
-DarojaAI/devnexus-common repository. The Python utilities themselves
+DarojaAI/py-daroja-libs repository. The Python utilities themselves
 live in `common/` (and are installable via `pip install -e .`) — see
 the top-level [README.md](../README.md) for the module catalog.
 

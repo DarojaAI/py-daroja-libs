@@ -9,7 +9,7 @@
 #
 # Usage (consumer project — uses shared notifier):
 #   module "notifier" {
-#     source              = "github.com/DarojaAI/devnexus-common//common/notifications/terraform"
+#     source              = "github.com/DarojaAI/py-daroja-libs//common/notifications/terraform"
 #     project_id          = "my-gcp-project"
 #     app_name            = "my-app"  # becomes topic and subscription prefix
 #     discord_webhook_url = var.discord_webhook_url
@@ -18,7 +18,7 @@
 #
 # Usage (initial project — deploys the shared notifier):
 #   module "notifier" {
-#     source              = "github.com/DarojaAI/devnexus-common//common/notifications/terraform"
+#     source              = "github.com/DarojaAI/py-daroja-libs//common/notifications/terraform"
 #     project_id          = "shared-notifier-project"
 #     app_name            = "gcp-discord-notifier"
 #     discord_webhook_url = var.discord_webhook_url

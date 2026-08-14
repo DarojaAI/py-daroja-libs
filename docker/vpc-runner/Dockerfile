@@ -3,7 +3,7 @@
 # =============================================================================
 # This is the canonical source of truth for the "vpc-runner" / "terraform-vpc"
 # Cloud Run Job image used across DarojaAI projects. It lives in
-# `devnexus-common` so all consumers (dev-nexus, rag-research-tool, future
+# `py-daroja-libs` so all consumers (dev-nexus, rag-research-tool, future
 # projects) build the same toolchain.
 #
 # What it provides:

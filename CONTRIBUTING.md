@@ -1,4 +1,4 @@
-# Contributing to devnexus-common
+# Contributing to py-daroja-libs
 
 Thanks for contributing! This document covers the conventions and workflow for this repo.
 
@@ -68,11 +68,11 @@ Common scopes: `db`, `llm`, `a2a`, `compliance`, `vpc-runner`, `release`, `ci`
 
 | Group | Install | Description |
 |---|---|---|
-| `psycopg3` | `pip install devnexus-common[psycopg3]` | PostgreSQL via psycopg 3 |
-| `pgvector` | `pip install devnexus-common[pgvector]` | pgvector support |
-| `tracing` | `pip install devnexus-common[tracing]` | langfuse + langsmith |
-| `openai` | `pip install devnexus-common[openai]` | OpenAI SDK (for OpenAI + Azure providers) |
-| `dev` | `pip install devnexus-common[dev]` | pytest + pytest-asyncio |
+| `psycopg3` | `pip install py-daroja-libs[psycopg3]` | PostgreSQL via psycopg 3 |
+| `pgvector` | `pip install py-daroja-libs[pgvector]` | pgvector support |
+| `tracing` | `pip install py-daroja-libs[tracing]` | langfuse + langsmith |
+| `openai` | `pip install py-daroja-libs[openai]` | OpenAI SDK (for OpenAI + Azure providers) |
+| `dev` | `pip install py-daroja-libs[dev]` | pytest + pytest-asyncio |
 
 ## Testing
 

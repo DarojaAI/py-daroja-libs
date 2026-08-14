@@ -1,5 +1,5 @@
 {
-  "name": "@darojaai/devnexus-common",
+  "name": "@darojaai/py-daroja-libs",
   "version": "0.0.0-development",
   "description": "Shared Python utilities for DarojaAI",
   "private": true,

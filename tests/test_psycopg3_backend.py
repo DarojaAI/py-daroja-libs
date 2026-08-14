@@ -223,7 +223,7 @@ class TestPsycopg3BackendBasics:
     def test_pool_attribute_is_public_for_manager_compatibility(self):
         """``pool`` is a public attribute (not ``_pool``).
 
-        Regression test for the devnexus-common-stress.yml nightly
+        Regression test for the py-daroja-libs-stress.yml nightly
         job's psycopg 3 parametrization, which was failing with
         ``AttributeError: 'Psycopg3Backend' object has no attribute
         'pool'``. Root cause: ``DatabaseManager.connect`` does

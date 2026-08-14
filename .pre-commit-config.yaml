@@ -1,4 +1,4 @@
-# Pre-commit hooks for devnexus-common
+# Pre-commit hooks for py-daroja-libs
 # Sourced from DarojaAI/infra-actions .pre-commit-config.yaml.
 # https://pre-commit.com/index.html
 
