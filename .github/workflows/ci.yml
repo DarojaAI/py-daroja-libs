@@ -1,6 +1,6 @@
 # CI for py-daroja-libs
 #
-# Uses the reusable-standard-ci composite from infra-actions@v1.22.1.
+# Uses the reusable-standard-ci composite from infra-actions@v1.35.8.
 # Python-only repo, so terraform-version is left empty (terraform-validate
 # is conditionally skipped in the composite).
 
@@ -20,7 +20,7 @@ permissions:
 
 jobs:
   standard-ci:
-    uses: DarojaAI/infra-actions/.github/workflows/reusable-standard-ci.yml@v1.22.1
+    uses: DarojaAI/infra-actions/.github/workflows/reusable-standard-ci.yml@v1.35.8
     with:
       python-version: '3.11'
       # Empty terraform-version → terraform-validate is skipped (Python-only repo)
