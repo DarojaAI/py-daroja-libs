@@ -22,7 +22,7 @@ jobs:
   standard-ci:
     uses: DarojaAI/infra-actions/.github/workflows/reusable-standard-ci.yml@v1.35.8
     with:
-      python-version: '3.11'
+      python-version: '3.14'
       # Empty terraform-version → terraform-validate is skipped (Python-only repo)
       terraform-version: ''
       python-requirements-files: 'requirements-dev.txt'
