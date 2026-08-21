@@ -839,32 +839,6 @@ class OpenAICompatibleClient(LLMClient):
                 if not content and message.get("reasoning"):
                     content = "[reasoning] " + message["reasoning"]
 
-                # OPENAI-TOOL-USE: tool_calls array on the message object.
-                # Each entry has id, function.name, function.arguments (JSON string).
-                # Verified against OpenAI API docs and OpenRouter proxy behavior.
-                raw_tool_calls = message.get("tool_calls")
-                if raw_tool_calls:
-                    normalized: List[ToolCall] = []
-                    for tc in raw_tool_calls:
-                        fn = tc.get("function", {})
-                        args_raw = fn.get("arguments", "{}")
-                        try:
-                            args = (
-                                json.loads(args_raw)
-                                if isinstance(args_raw, str)
-                                else args_raw
-                            )
-                        except (json.JSONDecodeError, TypeError):
-                            args = {}
-                        normalized.append(
-                            ToolCall(
-                                id=tc.get("id", ""),
-                                name=fn.get("name", ""),
-                                arguments=args,
-                            )
-                        )
-                    tool_calls = normalized
-
             return LLMResponse(
                 content=content,
                 model=data.get("model", model),
