@@ -7,7 +7,7 @@ name = "py-daroja-libs"
 dynamic = ["version"]
 description = "Shared Python utilities for DarojaAI projects: PostgreSQL client, LLM client, A2A client, and unified tracing."
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 license = {text = "MIT"}
 authors = [
     {name = "DarojaAI"},
