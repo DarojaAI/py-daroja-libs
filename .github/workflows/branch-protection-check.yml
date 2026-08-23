@@ -1,0 +1,21 @@
+name: Branch Protection Check
+
+on:
+  pull_request:
+    branches: [main]
+  schedule:
+    # Daily at 06:17 UTC. Catch silent rule-rotation events.
+    - cron: '17 6 * * *'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    name: Check branch protection vs live state
+    uses: DarojaAI/infra-actions/.github/workflows/reusable-check-branch-protection.yml@v1.38.1
+    with:
+      branch: main
+    secrets:
+      github-token: ${{ secrets.GITHUB_TOKEN }}
