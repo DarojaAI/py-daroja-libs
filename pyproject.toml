@@ -49,6 +49,13 @@ openai = [
 pgvector = [
     "pgvector>=0.3",
 ]
+# FastAPI service bootstrap (RFC `.github#52`, 0004). Opt in with
+# `pip install "py-daroja-libs[service]"`. FastAPI stays an optional
+# dependency so the core package doesn't drag it into non-service users.
+service = [
+    "fastapi>=0.111",
+    "uvicorn>=0.30",
+]
 dev = [
     "pytest>=7.0",
     "pytest-asyncio>=0.23",
